@@ -56,9 +56,9 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 router.put('/:id', auth, async (req, res) => {
-  const { text } = req.body; // Get the new text from the request
+  const { text } = req.body; 
 
-  // Simple validation: check if text was provided
+
   if (!text) {
     return res.status(400).json({ msg: 'Text is required' });
   }
@@ -70,20 +70,17 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(404).json({ msg: 'Task not found' });
     }
 
-    // Make sure the logged-in user owns this task
     if (task.user.toString() !== req.user.id) {
       return res.status(401).json({ msg: 'Not authorized' });
     }
 
-    // Update the task in the database
-    // { new: true } tells Mongoose to return the *updated* document
     const updatedTask = await Task.findByIdAndUpdate(
       req.params.id,
       { text: text },
       { new: true }
     );
 
-    res.json(updatedTask); // Send the updated task back
+    res.json(updatedTask);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server error');
