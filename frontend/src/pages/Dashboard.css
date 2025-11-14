@@ -112,7 +112,9 @@
   flex-direction: column;
   justify-content: space-between; 
   min-height: 220px; 
-  font-family: 'Courier New', Courier, monospace; 
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  transform: translateZ(0); 
 }
 
 .task-ticket-content p {
@@ -124,14 +126,15 @@
 
 .task-ticket-content small {
   font-size: 0.9em;
-  color: #555;
+  color: black;
+  font-weight: 600;
 }
 
 .task-actions {
   display: flex;
   gap: 10px;
   margin-top: 20px;
-  border-top: 1px dashed #ccc; 
+  border-top: 1px black solid;
   padding-top: 15px;
 }
 

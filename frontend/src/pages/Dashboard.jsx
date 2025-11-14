@@ -2,14 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import './Dashboard.css'; 
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+
+import SortableTicket from '../components/SortableTask.jsx';
 
 function Dashboard() {
   const [tasks, setTasks] = useState([]);
   const [text, setText] = useState('');
   const navigate = useNavigate();
-
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editingText, setEditingText] = useState('');
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, 
+      },
+    })
+  );
 
   useEffect(() => {
     fetchTasks();
@@ -79,10 +99,21 @@ function Dashboard() {
     alert('Logged out successfully.');
     navigate('/login');
   };
+  function handleDragEnd(event) {
+    const { active, over } = event;
 
+    if (active.id !== over.id) {
+      setTasks((items) => {
+        const oldIndex = items.findIndex((item) => item._id === active.id);
+        const newIndex = items.findIndex((item) => item._id === over.id);
+
+      
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  }
   return (
     <div className="dashboard-container">
-      {}
       <header className="dashboard-header">
         <h1>Dashboard</h1>
         <button onClick={handleLogout} className="logout-button">
@@ -90,13 +121,12 @@ function Dashboard() {
         </button>
       </header>
 
-      {}
       <form onSubmit={handleCreateTask} className="task-form">
         <h3>Add a new task</h3>
         <div className="task-form-content">
           <input
             type="text"
-            placeholder="Enter your task here..."
+            placeholder="Write your note..."
             value={text}
             onChange={(e) => setText(e.target.value)}
           />
@@ -105,48 +135,37 @@ function Dashboard() {
       </form>
 
       {}
-      <div className="task-list">
-        {tasks.length === 0 ? (
-          <p className="no-tasks-message">Your line is clear! Add a new task to get started.</p>
-        ) : (
-          tasks.map((task) => (
-            <div key={task._id} className="task-ticket">
-              
-              {editingTaskId === task._id ? (
-                <div className="task-edit">
-                  <textarea
-                    value={editingText}
-                    onChange={(e) => setEditingText(e.target.value)}
-                  />
-                  <div className="task-actions">
-                    <button onClick={() => handleUpdateTask(task._id)} className="save-button">
-                      Save
-                    </button>
-                    <button onClick={handleCancelEdit} className="cancel-button">
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  <div className="task-ticket-content">
-                    <p>{task.text}</p>
-                    <small>Created: {new Date(task.createdAt).toLocaleString()}</small>
-                  </div>
-                  <div className="task-actions">
-                    <button onClick={() => handleStartEdit(task)}>
-                      Edit
-                    </button>
-                    <button onClick={() => handleDeleteTask(task._id)} className="delete-button">
-                      Delete
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          ))
-        )}
-      </div>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <div className="task-list">
+          {}
+          <SortableContext
+            items={tasks.map(task => task._id)} 
+            strategy={verticalListSortingStrategy} 
+          >
+            {tasks.length === 0 ? (
+              <p className="no-tasks-message">Your line is clear!</p>
+            ) : (
+              tasks.map((task) => (
+                <SortableTicket
+                  key={task._id}
+                  task={task}
+                  editingTaskId={editingTaskId}
+                  editingText={editingText}
+                  setEditingText={setEditingText}
+                  handleStartEdit={() => handleStartEdit(task)}
+                  handleCancelEdit={handleCancelEdit}
+                  handleUpdateTask={handleUpdateTask}
+                  handleDeleteTask={handleDeleteTask}
+                />
+              ))
+            )}
+          </SortableContext>
+        </div>
+      </DndContext>
     </div>
   );
 }
